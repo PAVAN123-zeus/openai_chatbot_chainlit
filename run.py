@@ -75,6 +75,7 @@ async def on_chat_start():
             if files:
                 content_ = process_csv_file(files[0].path)
         
+    messages.append({"role":"user", "content": content_+ "this data is pandas dataframe. don't bring it up unless user specifies about this data."})
     cl.user_session.set('data', content_)
     msgs = cl.Message(content='file processing is done. now you can ask questions ..') 
     await msgs.send()
@@ -82,12 +83,7 @@ async def on_chat_start():
 
 @cl.on_message  
 async def main(message: cl.Message):
-    df = cl.user_session.get('data')
-    final_df = df
-
-    messages.append({"role":"user", "content": final_df+ "this data is pandas dataframe. don't bring it up unless user specifies about this data."})
     messages.append({"role": "user","content": message.content}) 
-
     print(messages)
     response = call_model(messages)
     await cl.Message(content=response).send()  
