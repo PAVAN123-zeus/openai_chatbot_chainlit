@@ -4,7 +4,7 @@
 
 #### Step 1: 
 * Create .env file with api_link, api_key, api_version, model
-Description : api_link: endpoint, api_key: azure api key, api_version: api version(example: "2024-02-15-preview"), model: deployment name
+* Description : api_link: endpoint, api_key: azure api key, api_version: api version(example: "2024-02-15-preview"), model: deployment name
 ### Without Docker:
 #### Step 2: 
 * pip install -r requirements.txt (to install all the required packages)
