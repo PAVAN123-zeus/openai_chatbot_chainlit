@@ -26,6 +26,6 @@ Description : api_link: endpoint, api_key: azure api key, api_version: api versi
 
 ## Future work:
 * Handling large csv files.
-* Maintaining higher number of chain of thoughts.
+* Ensuring the appropriate number of historical messages is maintained.
 * Worked on handling larger csv files with the help of embedding models (final_code.py file in async branch has the relevant implementation).
 
