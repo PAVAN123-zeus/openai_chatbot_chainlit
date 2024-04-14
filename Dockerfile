@@ -10,4 +10,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD ["chainlit", "run", "run.py"]
+CMD ["chainlit", "run", "app.py"]

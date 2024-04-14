@@ -3,4 +3,9 @@ openai == 1.16.1
 tiktoken == 0.6.0
 pandas == 2.1.4
 python-dotenv == 1.0.1
-
+numpy==1.26.4
+matplotlib==3.8.4
+seaborn==0.13.2
+scipy==1.13.0
+scikit-learn==1.4.2
+statsmodels==0.14.1
