@@ -16,8 +16,14 @@ client = AzureOpenAI(
   api_version=os.getenv("api_version")
 )
 
+messages = [  
+            {  
+                "role": "system",  
+                "content":"You are a Code Assistant equipped with advanced data analytical skills. You are here to help people by providing accurate, reusable and executable code solutions, and engage in general chit-chat." 
+            }]
 
-# processing csv file
+
+
 def process_csv_file(file_):
     data = ""
     encoding = tiktoken.get_encoding("cl100k_base")
@@ -26,11 +32,9 @@ def process_csv_file(file_):
     token_len = len(encoding.encode(str(dictionary)))
     if token_len<3000:
         data = str(dictionary)
-    else:
-        print("token limit exceeded please upload smaller file..")
     return data,df
 
-# calling model
+
 def call_model(messages):
     response = client.chat.completions.create(
         temperature=0.5,
@@ -44,7 +48,6 @@ def call_model(messages):
     return response.choices[0].message.content
 
 
-# calling python interpreter
 def python_exec(code: str, variables: dict, language: str = "python"):
     myexcutor = executor.PythonExecutor()
     code_output = myexcutor.execute(code, variables)
@@ -54,43 +57,42 @@ def python_exec(code: str, variables: dict, language: str = "python"):
 
 @cl.on_chat_start
 async def on_chat_start():
-    messages = [{"role": "system","content":"You are a Code Assistant equipped with advanced data analytical skills. You are here to help people by providing accurate, reusable and executable code solutions, and engage in general chit-chat."}]
-    cl.user_session.set("message history", messages)
-
-
-@cl.on_message
-async def main(message: cl.Message):
-    messages = cl.user_session.get('message history')
-    # Send empty message for loading
-    msg = cl.Message(
-        content=""
-    )
+    files = None
+    while files is None:
+        files = await cl.AskFileMessage(
+            content = "please upload the csv file to begin!",
+            accept=["text/csv"],
+            max_size_mb=10,
+            timeout=90
+        ).send()
+    
+    msg = cl.Message(content = "processing file.........")
     await msg.send()
 
-    csv_file = [file for file in message.elements if "text/csv" in file.mime]
-    if csv_file:
-        messages[:] = [messages.pop(0)]
-        msg = cl.Message(content = "processing file.........")
-        await msg.send()
-        content_ = process_csv_file(csv_file[0].path)
-        while len(content_[0])<=0:
-            files = await cl.AskFileMessage(
-                content = "Token limit exceeded please upload smaller csv file to proceed with..",
-                accept = ["text/csv"],
-                max_size_mb=10,
-                timeout=90
-            ).send()
-            if files:
-                content_ = process_csv_file(files[0].path)
-        cl.user_session.set("df", content_[1])
-        messages.append({"role":"user", "content": str(content_[0])+ "this data is pandas dataframe. don't bring it up unless user specifies about this data."})
-        msgs = cl.Message(content='file processing is done.') 
-        await msgs.send()
-    
+    content_ = process_csv_file(files[0].path)
+    while len(content_)<=0:
+        files = await cl.AskFileMessage(
+            content = "Token limit exceeded please upload smaller csv file to proceed with..",
+            accept = ["text/csv"],
+            max_size_mb=10,
+            timeout=90
+        ).send()
+        if files:
+            content_ = process_csv_file(files[0].path)
+
+    cl.user_session.set('data', content_[1])
+    messages.append({"role":"user", "content": str(content_[0])+ "this data is pandas dataframe. don't bring it up unless user specifies about this data."})
+    msgs = cl.Message(content='file processing is done. now you can ask questions ..') 
+    await msgs.send()
+
+
+@cl.on_message  
+async def main(message: cl.Message):
+    df = cl.user_session.get('data')
     messages.append({"role": "user","content": message.content})
     if "code" in str(messages[-1]['content']).lower() or "python" in str(messages[-1]['content']).lower():
         messages[-1]['content'] = messages[-1]['content']+ " and if you want to use dataframe in your code assume you have a dataframe stored in the variable 'df', you can directly reference it as 'df' without the need to create or load the dataframe."
-
+    
     print(messages)
 
     response = call_model(messages)
@@ -100,7 +102,7 @@ async def main(message: cl.Message):
         await cl.Message(content=response).send() 
         for i in range(len(matches)):
             python_code = str(matches[i][1])
-            output = await cl.make_async(python_exec)(code=python_code, variables={"df":cl.user_session.get("df")})
+            output = await cl.make_async(python_exec)(code=python_code, variables={"df":df})
             msgs = cl.Message(content=f"```OUTPUT\n {output}")
             await msgs.send()
 
