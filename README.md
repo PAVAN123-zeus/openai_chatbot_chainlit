@@ -8,12 +8,15 @@
 ### Without Docker:
 #### Step 2: 
 * pip install -r requirements.txt (to install all the required packages)
-* chainlit run run.py (to run the code)
+* chainlit run app.py (to run the code)
 
 ### With Docker:
 #### Step 2:
 * docker build -t chatbot ./  (to build the docker image)
 * docker run -d -p 8000:8000 -e .env chatbot (to run the docker container using image)
+
+### Input File:
+* "imdb.csv" is the sample file used for experimental purpose.
 
 ## Output:
 ### Data Analysis:
@@ -21,8 +24,16 @@
 
 ![alt text](image-1.png)
 
+![alt text](image-4.png)
+
+#### Executing Python code received from ChatGPT.
+![alt text](image-5.png)
+
+
 ### Normal conversation:
 ![alt text](image-2.png)
+
+![alt text](image-3.png)
 
 ## Future work:
 * Handling large csv files.
